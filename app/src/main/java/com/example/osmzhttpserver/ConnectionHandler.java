@@ -61,6 +61,12 @@ public class ConnectionHandler implements Runnable {
                 JSONObject telemetryData = telemetryStreamer.getTelemetryData();
                 httpResponseHandler.sendJSON(socket, telemetryData);
             }
+            else if (requestedUri.contains("/cmd/")) {
+                String command = requestedUri.replace("/cmd/", "");
+                CommandExecutor ce = new CommandExecutor(command);
+                String response = ce.execute();
+                httpResponseHandler.sendText(socket, response);
+            }
             else {
                 httpResponseHandler.sendFile(socket, context, requestedUri);
             }

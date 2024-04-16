@@ -123,4 +123,22 @@ public class HttpResponseHandler {
             e.printStackTrace();
         }
     }
+
+    public void sendText(Socket socket, String text) {
+        try {
+            OutputStream o = socket.getOutputStream();
+            BufferedOutputStream out = new BufferedOutputStream(o);
+
+            String header = "HTTP/1.0 200 OK\n" +
+                    "Date: " + new Date() + "\n" +
+                    "Content-Type: text/plain\n" +
+                    "Content-Length: " + text.length() + "\n\n";
+
+            out.write((header + text).getBytes());
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
