@@ -1,6 +1,7 @@
 package com.example.osmzhttpserver;
 
 import android.content.Context;
+import android.hardware.Camera;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
@@ -227,6 +228,34 @@ public class HttpResponseHandler {
             out.flush();
             out.close();
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendMJPEGStream(Socket socket, Camera camera) {
+        try {
+            OutputStream o = socket.getOutputStream();
+            BufferedOutputStream out = new BufferedOutputStream(o);
+
+            String header = "HTTP/1.0 200 OK\n" +
+                    "Date: " + new Date() + "\n" +
+                    "Content-Type: multipart/x-mixed-replace; boundary=OSMZ_boundary\n\n";
+
+            out.write((header).getBytes());
+
+            while (true) {
+                byte[] imageData = MainActivity.pictureData;
+                if (imageData != null) {
+                    out.write(("--OSMZ_boundary\n" +
+                            "Content-Type: image/jpeg\n" +
+                            "Content-Length: " + imageData.length + "\n\n").getBytes());
+                    out.write(imageData);
+                    out.write("\n\n".getBytes());
+                    out.flush();
+                }
+                Thread.sleep(100);
+            }
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }

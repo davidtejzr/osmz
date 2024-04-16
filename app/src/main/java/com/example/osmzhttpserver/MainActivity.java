@@ -10,6 +10,7 @@ import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -20,7 +21,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private SocketServer s;
     private static final int READ_EXTERNAL_STORAGE = 1;
 
-    public final String TAG = "MainActivity";
+    private static Camera mCamera;
     public static byte[] pictureData;
 
     @SuppressLint("HandlerLeak")
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Camera mCamera = getCameraInstance();
         CameraPreview mPreview = new CameraPreview(this, mCamera);
+        mCamera.setDisplayOrientation(90);
         FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
         preview.addView(mPreview);
     }
@@ -82,21 +84,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    public Camera getCameraInstance(){
-        Camera c = null;
-        try {
-            c = Camera.open(0);
-            c.setPreviewCallback(this);
+    public static Camera getCameraInstance(){
+        if (mCamera == null) {
+            try {
+                mCamera = Camera.open(0);
+                mCamera.setPreviewCallback((data, camera) -> {
+                    Camera.Size previewSize = mCamera.getParameters().getPreviewSize();
+                    pictureData = Utils.NV21toJPEGRotated(data, previewSize.width, previewSize.height, 90);
+                    Log.d("MJPEG Stream", "Picture taken");
+                });
+            }
+            catch (Exception ignored){
+            }
         }
-        catch (Exception ignored){
-        }
-        return c;
+        return mCamera;
     }
 
     @Override
     public void onPreviewFrame(byte[] data, Camera camera) {
         Camera.Size previewSize = camera.getParameters().getPreviewSize();
-        byte[] jpegArray = Utils.NV21toJPEG(data, previewSize.width, previewSize.height, 100);
-        pictureData = jpegArray;
+        pictureData = Utils.NV21toJPEG(data, previewSize.width, previewSize.height);
     }
 }

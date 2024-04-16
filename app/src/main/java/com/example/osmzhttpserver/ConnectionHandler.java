@@ -68,6 +68,9 @@ public class ConnectionHandler implements Runnable {
                 httpResponseHandler.sendText(socket, response);
             }
             else if (requestedUri.contains("/camera/stream")) {
+                httpResponseHandler.sendMJPEGStream(socket, MainActivity.getCameraInstance());
+            }
+            else if (requestedUri.contains("/camera")) {
                 httpResponseHandler.sendImage(socket, MainActivity.pictureData);
             }
             else {
