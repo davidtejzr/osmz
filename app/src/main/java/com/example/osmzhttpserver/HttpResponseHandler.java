@@ -59,15 +59,24 @@ public class HttpResponseHandler {
     }
 
     public void sendFile(Socket socket, Context context, String filePath) {
-        if (filePath.equals("/")) {
-            filePath = "index.html";
-        }
-
         try {
+            File file = new File(context.getExternalFilesDir(null), filePath);
+            if (filePath.equals("/")) {
+                File indexFile = new File(context.getExternalFilesDir(null), "index.html");
+                if (!indexFile.exists()) {
+                    sendDirectoryStructure(socket, context.getExternalFilesDir(null));
+                    return;
+                } else {
+                    filePath = "index.html";
+                }
+            }  else if (file.isDirectory()) {
+                sendDirectoryStructure(socket, file);
+                return;
+            }
+
             OutputStream o = socket.getOutputStream();
             BufferedOutputStream out = new BufferedOutputStream(o);
-            File file = new File(context.getExternalFilesDir(null), filePath);
-            if (!file.exists() || file.isDirectory()) {
+            if (!file.exists()) {
                 this.send404(socket, filePath);
             } else {
                 FileInputStream fin;
@@ -140,5 +149,66 @@ public class HttpResponseHandler {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void sendHtml(Socket socket, String html) {
+        try {
+            OutputStream o = socket.getOutputStream();
+            BufferedOutputStream out = new BufferedOutputStream(o);
+
+            String header = "HTTP/1.0 200 OK\n" +
+                    "Date: " + new Date() + "\n" +
+                    "Content-Type: text/html\n" +
+                    "Content-Length: " + html.length() + "\n\n";
+
+            out.write((header + html).getBytes());
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendDirectoryStructure(Socket socket, File rootDirectory) {
+        try {
+            String directoryStructure = getDirectoryStructure(rootDirectory, "/", false);
+            sendHtml(socket, directoryStructure);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String getDirectoryStructure(File directory, String path, Boolean submenu) throws IOException {
+        StringBuilder directoryStructure = new StringBuilder();
+        File[] files = directory.listFiles();
+
+        if (path.equals("/")) {
+            directoryStructure.append("<h1>").append(directory.getName()).append("</h1>");
+        }
+
+        if (files != null) {
+            directoryStructure.append("<ul>");
+            if (!submenu && !directory.getName().equals("files")) {
+                directoryStructure.append("<li><a href=\"/\">..</a></li>");
+                if (directory.getParentFile() != null) {
+                    String parentPath = directory.getParentFile().getName();
+                    if (parentPath.equals("files")) {
+                        parentPath = "/";
+                    }
+                    directoryStructure.append("<li><a href=\"").append(parentPath).append("\">.</a></li>");
+                }
+            }
+            for (File file : files) {
+                String newPath = file.getName();
+                if (file.isDirectory()) {
+                    directoryStructure.append("<li><a href=\"").append(newPath).append("\">").append(file.getName()).append("</a>").append(getDirectoryStructure(file, newPath, true)).append("</li>");
+                } else {
+                    directoryStructure.append("<li><a href=\"").append(newPath).append("\">").append(file.getName()).append("</a></li>");
+                }
+            }
+            directoryStructure.append("</ul>");
+        }
+
+        return directoryStructure.toString();
     }
 }

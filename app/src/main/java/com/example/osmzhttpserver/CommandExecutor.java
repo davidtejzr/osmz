@@ -1,10 +1,13 @@
 package com.example.osmzhttpserver;
 
+import android.os.Build;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class CommandExecutor {
     private final String command;
@@ -20,14 +23,26 @@ public class CommandExecutor {
             processBuilder.redirectErrorStream(true);
             Process process = processBuilder.start();
 
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
             StringBuilder output = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line).append("\n");
+            Thread outputThread = new Thread(() -> {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        output.append(line).append("\n");
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+            outputThread.start();
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (!process.waitFor(5, TimeUnit.SECONDS)) {
+                    process.destroy();
+                }
             }
 
+            outputThread.join();
             return output.toString();
         }
          catch (Exception e) {
