@@ -211,4 +211,23 @@ public class HttpResponseHandler {
 
         return directoryStructure.toString();
     }
+
+    public void sendImage(Socket socket, byte[] imageData) {
+        try {
+            OutputStream o = socket.getOutputStream();
+            BufferedOutputStream out = new BufferedOutputStream(o);
+
+            String header = "HTTP/1.0 200 OK\n" +
+                    "Date: " + new Date() + "\n" +
+                    "Content-Type: image/jpeg\n" +
+                    "Content-Length: " + imageData.length + "\n\n";
+
+            out.write((header).getBytes());
+            out.write(imageData);
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

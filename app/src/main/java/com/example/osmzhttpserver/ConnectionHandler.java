@@ -67,6 +67,9 @@ public class ConnectionHandler implements Runnable {
                 String response = ce.execute();
                 httpResponseHandler.sendText(socket, response);
             }
+            else if (requestedUri.contains("/camera/stream")) {
+                httpResponseHandler.sendImage(socket, MainActivity.pictureData);
+            }
             else {
                 httpResponseHandler.sendFile(socket, context, requestedUri);
             }

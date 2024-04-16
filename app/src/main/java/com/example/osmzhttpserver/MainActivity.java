@@ -6,20 +6,22 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, Camera.PreviewCallback {
 
     private SocketServer s;
     private static final int READ_EXTERNAL_STORAGE = 1;
+
+    public final String TAG = "MainActivity";
+    public static byte[] pictureData;
 
     @SuppressLint("HandlerLeak")
     Handler handler = new Handler() {
@@ -40,6 +42,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         btn1.setOnClickListener(this);
         btn2.setOnClickListener(this);
+
+        Camera mCamera = getCameraInstance();
+        CameraPreview mPreview = new CameraPreview(this, mCamera);
+        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+        preview.addView(mPreview);
     }
 
 
@@ -64,20 +71,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode) {
-
-            case READ_EXTERNAL_STORAGE:
-                if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    Context context = getApplicationContext();
-                    s = new SocketServer(context, handler);
-                    s.start();
-                }
-                break;
-
-            default:
-                break;
+        if (requestCode == READ_EXTERNAL_STORAGE) {
+            if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                Context context = getApplicationContext();
+                s = new SocketServer(context, handler);
+                s.start();
+            }
         }
+    }
+
+    public Camera getCameraInstance(){
+        Camera c = null;
+        try {
+            c = Camera.open(0);
+            c.setPreviewCallback(this);
+        }
+        catch (Exception ignored){
+        }
+        return c;
+    }
+
+    @Override
+    public void onPreviewFrame(byte[] data, Camera camera) {
+        Camera.Size previewSize = camera.getParameters().getPreviewSize();
+        byte[] jpegArray = Utils.NV21toJPEG(data, previewSize.width, previewSize.height, 100);
+        pictureData = jpegArray;
     }
 }
