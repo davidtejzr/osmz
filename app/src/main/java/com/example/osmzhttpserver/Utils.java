@@ -6,6 +6,7 @@ import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
+import android.view.Surface;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -51,5 +52,24 @@ public class Utils {
         }
 
         return rotatedBytes;
+    }
+
+    public static int getCurrentRotation(int rotation) {
+        int degrees = 0;
+        switch (rotation) {
+            case Surface.ROTATION_0:
+                degrees = 90;
+                break; // Natural orientation
+            case Surface.ROTATION_90:
+                degrees = 0;
+                break; // Landscape left
+            case Surface.ROTATION_180:
+                degrees = 180;
+                break;// Upside down
+            case Surface.ROTATION_270:
+                degrees = 180;
+                break;// Landscape right
+        }
+        return degrees;
     }
 }

@@ -6,11 +6,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.Surface;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -23,6 +25,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private static Camera mCamera;
     public static byte[] pictureData;
+    public static int rotation = 0;
 
     @SuppressLint("HandlerLeak")
     Handler handler = new Handler() {
@@ -37,6 +40,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        rotation = Utils.getCurrentRotation(getWindowManager().getDefaultDisplay().getRotation());
 
         Button btn1 = (Button)findViewById(R.id.button1);
         Button btn2 = (Button)findViewById(R.id.button2);
@@ -46,11 +50,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Camera mCamera = getCameraInstance();
         CameraPreview mPreview = new CameraPreview(this, mCamera);
-        mCamera.setDisplayOrientation(90);
+        mCamera.setDisplayOrientation(rotation);
         FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
         preview.addView(mPreview);
     }
-
 
     @Override
     public void onClick(View v) {
@@ -90,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mCamera = Camera.open(0);
                 mCamera.setPreviewCallback((data, camera) -> {
                     Camera.Size previewSize = mCamera.getParameters().getPreviewSize();
-                    pictureData = Utils.NV21toJPEGRotated(data, previewSize.width, previewSize.height, 90);
+                    pictureData = Utils.NV21toJPEGRotated(data, previewSize.width, previewSize.height, rotation);
                     Log.d("MJPEG Stream", "Picture taken");
                 });
             }

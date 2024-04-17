@@ -253,7 +253,7 @@ public class HttpResponseHandler {
                     out.write("\n\n".getBytes());
                     out.flush();
                 }
-                Thread.sleep(100);
+                Thread.sleep(50);
             }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();

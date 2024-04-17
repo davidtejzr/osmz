@@ -11,7 +11,7 @@ import java.util.concurrent.Semaphore;
 
 public class SocketServer extends Thread {
     public static final int PORT = 12345;
-    public static final int MAX_SEMAPHORE_PERMITS = 2;
+    public static final int MAX_SEMAPHORE_PERMITS = 5;
     ServerSocket serverSocket;
     boolean bRunning;
     Context context;
