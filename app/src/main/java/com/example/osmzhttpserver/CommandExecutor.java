@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
 public class CommandExecutor {
@@ -38,7 +39,7 @@ public class CommandExecutor {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 if (!process.waitFor(5, TimeUnit.SECONDS)) {
-                    process.destroy();
+                    process.destroyForcibly();
                 }
             }
 
